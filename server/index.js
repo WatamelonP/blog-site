@@ -21,17 +21,16 @@ app.use(cors(corsOptions));
 
 mongoose.connect(process.env.MONGODB_STRING);
 
-mongoose.connection.once('open', ()=> console.log(`Now connected to mongoDB Atlas`));
+mongoose.connection.once('open', () => console.log(`Now connected to mongoDB Atlas`));
 
 
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/posts', commentRoutes)
 
-if(require.main === module){
-	app.listen(process.env.PORT || 3000, ()=> {
-		console.log(`API is now open on port ${process.env.PORT || 3000}`)
-	})
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+	console.log(`API is now open on port ${PORT}`);
+});
 
-module.exports = {app, mongoose}
+module.exports = { app, mongoose };
