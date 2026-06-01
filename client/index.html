@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>my-vue-app</title>
+  <style>
+    html.dark body { background-color: oklch(0.1649 0.0352 281.8285) !important; }
+  </style>
+  <script>
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.add('no-transition')
+    window.addEventListener('load', () => {
+      document.documentElement.classList.remove('no-transition')
+    })
+  </script>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
