@@ -112,6 +112,10 @@ function logout() {
       <i class="bi bi-box-arrow-in-right"></i>
       <span>Login</span>
     </router-link>
+    <router-link v-if="user.email" :to="{name: 'Logout'}" class="app-bottomnav__item">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Logout</span>
+    </router-link>
     <button class="app-bottomnav__item" @click="toggleDark">
       <i :class="isDark ? 'bi bi-sun' : 'bi bi-moon'"></i>
       <span>{{ isDark ? 'Light' : 'Dark' }}</span>

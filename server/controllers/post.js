@@ -98,10 +98,12 @@ module.exports.getPostById = async (req, res, next) => {
 				title: post.title,
 				content: post.content,
 				author: post.author.username,
+				dateAdded: post.dateAdded,
 				comments: post.comments.map(comment => ({
 					_id: comment._id,
 					author: comment.author.username,
-					comment: comment.comment
+					comment: comment.comment,
+					dateCreated: comment.createdAt
 				}))
 			})
 
@@ -156,11 +158,9 @@ module.exports.deletePost = async (req, res, next) => {
 			})
 		}
 
-
+		console.log(req.user.isAdmin)
 		if (post.author.toString() !== req.user.id && !req.user.isAdmin) {
-			return res.status(401).send({
-				message: "Unauthorized request"
-			})
+			return res.status(401).send({ message: "Unauthorized request" })
 		}
 
 		const deletedPost = await Post.findByIdAndDelete(req.params.id);

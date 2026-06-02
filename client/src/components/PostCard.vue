@@ -1,14 +1,18 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Notyf } from 'notyf';
+import { Notyf } from 'notyf'
 import api from '../api.js'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useGlobalStore } from '../stores/global.js'
+import EditPostModal from './EditPostModal.vue'
+import ViewPostModal from './ViewPostModal.vue'
 
-const notyf = new Notyf();
+const viewModal = ref(false)
+const notyf = new Notyf()
 const router = useRouter()
 const { user } = storeToRefs(useGlobalStore())
+
 const props = defineProps({
   post: {
     type: Object,
@@ -16,8 +20,12 @@ const props = defineProps({
   }
 })
 
-// --- FIX 1: Declared the missing modal visibility reference ---
+const emit = defineEmits(['updated'])
+
 const deleteModal = ref(false)
+const editModal = ref(false)
+const showComments = ref(false)
+const showAllComments = ref(false)
 
 const visibleComments = computed(() => {
   if (!props.post.comments) return []
@@ -26,46 +34,42 @@ const visibleComments = computed(() => {
     : props.post.comments.slice(0, 3)
 })
 
-const showComments = ref(false)
-const showAllComments = ref(false)
-
-const hasMore = computed(() =>
-  props.post.comments?.length > 3
-)
+const hasMore = computed(() => props.post.comments?.length > 3)
 
 function formatDate(dateStr) {
   const date = new Date(dateStr)
   const now = new Date()
   const isToday = date.toDateString() === now.toDateString()
-
-  if (isToday) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  } else {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-  }
+  return isToday
+    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-// --- FIX 2: Renamed function to match your modal's @click="confirmDelete" ---
 async function confirmDelete() {
   try {
     await api.delete(`/posts/deletePost/${props.post._id}`)
     notyf.success('Post deleted!')
-    deleteModal.value = false // Updated to match the ref name
+    deleteModal.value = false
     router.go(0)
   } catch (err) {
     notyf.error('Failed to delete post.')
+    console.log("user.value.isAdmin: ",user.value.isAdmin)
     console.error(err)
   }
 }
 
-// Placeholder for update post logic so it doesn't crash your click handler
-function updatePost() {
-  // console.log('Update post triggered for:', props.post._id, user.value.username)
+
+
+function onPostUpdated(updatedPost) {
+  emit('updated', updatedPost)
+  editModal.value = false
+  router.go(0)
 }
+
 </script>
 
 <template>
-  <!-- --- FIX 3: Wrapped components in a main root container --- -->
+  
   <div class="post-card-container">
     
     <div class="post-card">
@@ -80,16 +84,16 @@ function updatePost() {
           {{ formatDate(post.dateCreated) }}
         </span>
         
-        <div class="dropdown" v-if="post.author === user.username">
+        <div class="dropdown" v-if="post.author === user.username || user.isAdmin">
           <button class="btn p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-three-dots-vertical"></i>
           </button>
           
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <button class="dropdown-item" type="button" @click="updatePost()">
-                Update Post
-              </button>
+              <button class="dropdown-item" type="button" @click="editModal = true">
+  Update Post
+</button>
             </li>
             <li>
               <button class="dropdown-item text-danger" type="button" @click="deleteModal = true">
@@ -100,7 +104,7 @@ function updatePost() {
         </div>
       </div>
 
-      <div class="post-card__body">
+      <div class="post-card__body" @click="viewModal = true" style="cursor: pointer;">
         <h3 class="post-card__title">{{ post.title }}</h3>
         <p class="post-card__content">{{ post.content }}</p>
       </div>
@@ -161,7 +165,7 @@ function updatePost() {
       </template>
     </div>
 
-    <!-- MODAL (Kept outside the post card but inside the root container) -->
+   
     <div class="custom-modal-backdrop" v-if="deleteModal" @click.self="deleteModal = false">
       <div class="custom-modal" role="dialog" aria-modal="true">
         <div class="custom-modal-header">
@@ -185,6 +189,17 @@ function updatePost() {
         </div>
       </div>
     </div>
-
+    
+   <EditPostModal
+  v-if="editModal"
+  :post="post"
+  @close="editModal = false"
+  @updated="onPostUpdated"
+/>
+<ViewPostModal
+  v-if="viewModal"
+  :postId="post._id"
+  @close="viewModal = false"
+/>
   </div>
 </template>
